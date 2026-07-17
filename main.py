@@ -282,109 +282,44 @@ def is_valid_entity(entity_type, value):
 # =====================================================
 # Main Program
 # =====================================================
-def main():
-    doc = Document("input/Red Herring Prospectus.docx")
+def redact_document(input_path, output_path):
+    doc = Document(input_path)
 
     emails = find_emails(doc)
     phones = find_phones(doc)
 
-    print("Emails Found")
-    print("-" * 40)
-
-    for email in sorted(emails):
-        print(email)
-
-    print(f"\nTotal Emails: {len(emails)}")
-
-
-    print("\nPhone Numbers Found")
-    print("-" * 40)
-
-    for phone in sorted(phones):
-        print(phone)
-
-    print(f"\nTotal Phones: {len(phones)}")
-
-
-    # Create Mapping
     email_mapping = create_email_mapping(emails)
     phone_mapping = create_phone_mapping(phones)
 
-
-    print("\nEmail Mapping")
-    print("-" * 50)
-
-    for original, fake_email in email_mapping.items():
-        print(f"{original} --> {fake_email}")
-
-
-    print("\nPhone Mapping")
-    print("-" * 50)
-
-    for original, fake_phone in phone_mapping.items():
-        print(f"{original} --> {fake_phone}")
-
     entities = detect_document_pii(doc)
 
-    print("\nDetected PII")
-    print("-" * 50)
-
-    seen = set()
-
-    for entity_type, value in entities:
-        if is_valid_entity(entity_type, value):
-            if (entity_type, value) not in seen:
-                print(f"{entity_type}: {value}")
-                seen.add((entity_type, value))
-                
     person_mapping = {}
     organization_mapping = {}
     location_mapping = {}
 
-    # Build mappings
     for entity_type, value in entities:
 
         if not is_valid_entity(entity_type, value):
             continue
 
         if entity_type == "PERSON":
-            if value not in person_mapping:
-                person_mapping[value] = fake.name()
+            person_mapping.setdefault(value, fake.name())
 
         elif entity_type == "ORGANIZATION":
-            if value not in organization_mapping:
-                organization_mapping[value] = fake.company()
+            organization_mapping.setdefault(value, fake.company())
 
         elif entity_type == "LOCATION":
-            if value not in location_mapping:
-                location_mapping[value] = fake.city()
-    print("\nPerson Mapping")
-    for original, fake_name in person_mapping.items():
-        print(f"{original} --> {fake_name}")
+            location_mapping.setdefault(value, fake.city())
 
-    print("\nOrganization Mapping")
-    for original, fake_company in organization_mapping.items():
-        print(f"{original} --> {fake_company}")
-
-    print("\nLocation Mapping")
-    for original, fake_location in location_mapping.items():
-        print(f"{original} --> {fake_location}")
-
-    # Replace everything
     replace_emails(doc, email_mapping)
     replace_phones(doc, phone_mapping)
     replace_entities(doc, person_mapping)
     replace_entities(doc, location_mapping)
     replace_entities(doc, organization_mapping)
 
-    # Save file
-    output_file = "output/Redacted_Prospectus.docx"
-    doc.save(output_file)
-
-    print("\n" + "=" * 50)
-    print("Redaction Completed Successfully!")
-    print(f"Output File: {output_file}")
-    print("=" * 50)
-
+    doc.save(output_path)
 if __name__ == "__main__":
-    main()
+    redact_document(
+        "input/Red Herring Prospectus.docx",
+        "output/Redacted_Prospectus.docx"
+    )
