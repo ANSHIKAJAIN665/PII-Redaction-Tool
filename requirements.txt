@@ -3,3 +3,8 @@ faker
 spacy
 presidio-analyzer
 presidio-anonymizer
+streamlit
+python-docx
+faker
+presidio-analyzer
+spacy
